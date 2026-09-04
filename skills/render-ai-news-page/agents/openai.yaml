@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI 技术新闻单页生成"
+  short_description: "按独立日报或周报规则将新闻文本渲染为固定模板单页 HTML"
+  default_prompt: "使用 $render-ai-news-page 按我指定的日报或周报类型，将通过文件、消息或上下文提供的新闻文本渲染为模板化单页 HTML，并完成 lint 校验。"
