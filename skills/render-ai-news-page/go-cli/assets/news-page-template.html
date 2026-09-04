@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{DATE_CN}} {{REPORT_TITLE}}：完整正文与原始来源。">
+  <meta name="generator" content="render-ai-news-page">
+  <meta name="news-source-sha256" content="{{SOURCE_SHA256}}">
+  <meta name="news-template-sha256" content="{{TEMPLATE_SHA256}}">
+  <title>{{REPORT_TITLE}}｜{{DATE_DOTTED}}</title>
+  <script>
+    (function () {
+      try {
+        var paper = localStorage.getItem('ainews:paper');
+        if (paper) document.documentElement.dataset.paper = paper;
+      } catch (_) {}
+    })();
+  </script>
+  <style>
+    :root {
+      --paper: #fff;
+      --surface: #f6f8f7;
+      --ink: #1a1e1c;
+      --muted: #626b66;
+      --line: #e2e7e4;
+      --accent: #38705f;
+      --serif: "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
+      --sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: var(--sans); }
+    .topbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(12px); }
+    .topbar__inner { width: min(92vw, 1100px); min-height: 52px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { font-weight: 700; }
+    .meta { color: var(--muted); font-size: 13px; }
+    .layout { width: min(92vw, 1100px); margin: 0 auto; display: grid; grid-template-columns: 220px minmax(0, 760px); gap: 48px; justify-content: center; }
+    .toc { position: sticky; top: 76px; max-height: calc(100vh - 100px); overflow: auto; padding: 44px 0; }
+    .toc ol { list-style: none; margin: 0; padding: 0; }
+    .toc a { display: block; padding: 6px 0; color: var(--muted); text-decoration: none; font-size: 13px; }
+    .toc a:hover { color: var(--accent); }
+    .article { min-width: 0; padding: 52px 0 96px; font-size: 17px; line-height: 1.85; overflow-wrap: break-word; }
+    .article h1, .article h2, .article h3 {
+      font-family: var(--serif);
+      text-wrap: pretty;
+      word-break: normal;
+      line-break: strict;
+      overflow-wrap: break-word;
+    }
+    .article h1 { margin: 0 0 18px; font-size: clamp(32px, 5vw, 56px); line-height: 1.18; }
+    .article h2 { margin: 52px 0 18px; font-size: 30px; line-height: 1.3; }
+    .article h3 { margin: 36px 0 12px; font-size: 22px; }
+    .article p { margin: 0 0 1.15em; }
+    .article a { color: var(--accent); text-underline-offset: 3px; }
+    .article blockquote { margin: 1.4em 0; padding: 1px 18px; border-left: 4px solid var(--accent); color: var(--muted); background: var(--surface); }
+    .article pre { overflow: auto; padding: 18px; border-radius: 10px; color: #e6f0eb; background: #17211e; }
+    .article code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .article table { width: 100%; border-collapse: collapse; margin: 1.5em 0; font-size: 15px; }
+    .article th, .article td { padding: 10px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .article .heading-word { white-space: nowrap; }
+    .article .heading-word.is-oversize { white-space: normal; }
+    .article .heading-break { display: block; height: 0; }
+    @media (max-width: 900px) {
+      .layout { display: block; }
+      .toc { display: none; }
+      .article { padding-top: 34px; }
+      .topbar__inner { width: min(92vw, 760px); }
+    }
+    @media print {
+      .topbar, .toc { display: none; }
+      .layout { display: block; width: auto; }
+      .article { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand">AI NEWS</div>
+      <div class="meta">{{DATE_DOTTED}}</div>
+    </div>
+  </header>
+  <main class="layout">
+    <nav class="toc" aria-label="目录">
+      <ol data-toc></ol>
+    </nav>
+    <article class="article">{{ARTICLE_HTML}}</article>
+  </main>
+  <script>
+    (function () {
+      'use strict';
+      const safely = (name, fn) => { try { fn(); } catch (error) { console.warn(name, error); } };
+      const article = document.querySelector('.article');
+      const toc = document.querySelector('[data-toc]');
+
+      safely('标题智能换行', () => {
+        if (!article || !('Segmenter' in Intl)) return;
+        const segmenter = new Intl.Segmenter('zh-CN', { granularity: 'word' });
+        const strongBreakPunctuation = new Set(['：', ':', '，', ',']);
+        const noBreakGroups = new Set(['（', '(', '《', '“', '‘']);
+        const boundaryPenalty = (left, right) => {
+          if (!left || !right) return 0;
+          if (strongBreakPunctuation.has(left.slice(-1))) return -20;
+          if (noBreakGroups.has(left.slice(-1)) || /[，。！？；：、）》”’]/.test(right[0])) return 40;
+          return 0;
+        };
+        const headings = [...article.querySelectorAll('h1,h2,h3')];
+        headings.forEach((heading) => {
+          const source = heading.textContent.trim();
+          if (!source) return;
+          const words = [...segmenter.segment(source)].map((part) => part.segment).filter(Boolean);
+          heading.textContent = '';
+          words.forEach((word) => {
+            const span = document.createElement('span');
+            span.className = 'heading-word';
+            span.textContent = word;
+            heading.append(span);
+          });
+          const lineLimit = heading.clientWidth;
+          const spans = [...heading.querySelectorAll('.heading-word')];
+          let used = 0;
+          spans.forEach((span, index) => {
+            const width = span.getBoundingClientRect().width;
+            if (width > lineLimit) span.classList.add('is-oversize');
+            if (index > 0 && used + width > lineLimit && boundaryPenalty(spans[index - 1].textContent, span.textContent) <= 0) {
+              const marker = document.createElement('span');
+              marker.className = 'heading-break';
+              marker.setAttribute('aria-hidden', 'true');
+              span.before(marker);
+              used = 0;
+            }
+            used += width;
+          });
+        });
+      });
+
+      safely('目录生成', () => {
+        if (!article || !toc) return;
+        [...article.querySelectorAll('h1:not(:first-child), h2')].forEach((heading, index) => {
+          heading.id = `section-${index + 1}`;
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = `#${heading.id}`;
+          link.textContent = heading.textContent;
+          item.append(link);
+          toc.append(item);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
