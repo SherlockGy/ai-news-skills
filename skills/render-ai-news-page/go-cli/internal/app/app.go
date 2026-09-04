@@ -12,9 +12,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/SherlockGy/ai-news-skills/skills/render-ai-news-page/go-cli/assets"
-	"github.com/SherlockGy/ai-news-skills/skills/render-ai-news-page/go-cli/internal/domain"
-	"github.com/SherlockGy/ai-news-skills/skills/render-ai-news-page/go-cli/internal/page"
+	"finance-skills/common/render-ai-news-page/go-cli/assets"
+	"finance-skills/common/render-ai-news-page/go-cli/internal/domain"
+	"finance-skills/common/render-ai-news-page/go-cli/internal/page"
 )
 
 const (

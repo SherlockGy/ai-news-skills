@@ -1,4 +1,4 @@
-module github.com/SherlockGy/ai-news-skills/skills/render-ai-news-page/go-cli
+module finance-skills/common/render-ai-news-page/go-cli
 
 go 1.25.0
 

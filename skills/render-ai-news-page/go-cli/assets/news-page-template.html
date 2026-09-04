@@ -1,152 +1,1035 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="{{DATE_CN}} {{REPORT_TITLE}}：完整正文与原始来源。">
-  <meta name="generator" content="render-ai-news-page">
-  <meta name="news-source-sha256" content="{{SOURCE_SHA256}}">
-  <meta name="news-template-sha256" content="{{TEMPLATE_SHA256}}">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="{{DATE_CN}} {{REPORT_TITLE}}：完整正文与原始来源。" />
+  <meta name="generator" content="render-ai-news-page" />
+  <meta name="news-source-sha256" content="{{SOURCE_SHA256}}" />
+  <meta name="news-template-sha256" content="{{TEMPLATE_SHA256}}" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ef6b2e'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-size='30' font-family='Arial' font-weight='700' fill='white'%3EAI%3C/text%3E%3C/svg%3E" />
   <title>{{REPORT_TITLE}}｜{{DATE_DOTTED}}</title>
   <script>
+    /* 提前应用已保存的纸色，避免加载时闪色 */
     (function () {
       try {
         var paper = localStorage.getItem('ainews:paper');
-        if (paper) document.documentElement.dataset.paper = paper;
-      } catch (_) {}
+        if (paper === 'cream' || paper === 'green') document.documentElement.setAttribute('data-paper', paper);
+      } catch (e) { /* 存储不可用时使用默认纸色 */ }
     })();
   </script>
   <style>
+    /* ============================================================
+       设计体系：工程情报日报（仅浅色）
+       字体：衬线重磅标题 / 无衬线正文 / 等宽元信息
+       线条：全文统一使用短粗签名线，不用通栏细线
+       签名元素：深色终端面板（pre）、字段标签芯片、高亮日期牌
+       ============================================================ */
     :root {
-      --paper: #fff;
-      --surface: #f6f8f7;
+      --paper: #ffffff;
+      --surface: #f7f8f7;
+      --surface-strong: #ffffff;
       --ink: #1a1e1c;
-      --muted: #626b66;
-      --line: #e2e7e4;
+      --muted: #5e6662;
+      --quiet: #8f958f;
+      --line: #e7e9e7;
+      --line-strong: #ced3cf;
       --accent: #38705f;
-      --serif: "Noto Serif SC", "Source Han Serif SC", Georgia, serif;
-      --sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+      --accent-dark: #2c584c;     /* 链接 / 强调 */
+      --accent-soft: #eaf0ec;
+      --panel: #14201d;           /* 终端面板底色 */
+      --panel-ink: #d5e3dc;
+      --panel-line: #263833;
+      --backdrop: rgba(18, 26, 23, .45);
+      --shadow: 0 12px 36px rgba(18, 26, 23, .13);
+      --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, Georgia, serif;
+      --sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", Inter, system-ui, sans-serif;
+      --mono: ui-monospace, "SF Mono", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
+      --article-size: 17px;       /* 由脚本调节：14–24px，localStorage 持久化 */
     }
+    /* ===== 纸色：米黄 ===== */
+    :root[data-paper="cream"] {
+      --paper: #f6f1e3;
+      --surface: #faf6ea;
+      --surface-strong: #fffdf4;
+      --ink: #211e15;
+      --muted: #6a6355;
+      --quiet: #97907f;
+      --line: #e6dfcb;
+      --line-strong: #cfc6ae;
+      --accent-soft: #e8e9d8;
+      --backdrop: rgba(33, 30, 21, .45);
+      --shadow: 0 12px 36px rgba(33, 30, 21, .13);
+    }
+    /* ===== 纸色：灰绿 ===== */
+    :root[data-paper="green"] {
+      --paper: #f2f4f1;
+      --surface: #fafbf9;
+      --surface-strong: #ffffff;
+      --ink: #171d1b;
+      --muted: #5d6660;
+      --quiet: #8a938d;
+      --line: #dde1dc;
+      --line-strong: #c2c9c3;
+      --accent-soft: #e5ede8;
+    }
+
+    /* ===== 基础 ===== */
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body { margin: 0; color: var(--ink); background: var(--paper); font-family: var(--sans); }
-    .topbar { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(12px); }
-    .topbar__inner { width: min(92vw, 1100px); min-height: 52px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-    .brand { font-weight: 700; }
-    .meta { color: var(--muted); font-size: 13px; }
-    .layout { width: min(92vw, 1100px); margin: 0 auto; display: grid; grid-template-columns: 220px minmax(0, 760px); gap: 48px; justify-content: center; }
-    .toc { position: sticky; top: 76px; max-height: calc(100vh - 100px); overflow: auto; padding: 44px 0; }
-    .toc ol { list-style: none; margin: 0; padding: 0; }
-    .toc a { display: block; padding: 6px 0; color: var(--muted); text-decoration: none; font-size: 13px; }
-    .toc a:hover { color: var(--accent); }
-    .article { min-width: 0; padding: 52px 0 96px; font-size: 17px; line-height: 1.85; overflow-wrap: break-word; }
-    .article h1, .article h2, .article h3 {
+    html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--sans);
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, a { font: inherit; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    ::selection { color: #fff; background: var(--accent); }
+
+    /* ===== 阅读进度条 ===== */
+    .progress {
+      position: fixed;
+      inset: 0 auto auto 0;
+      z-index: 100;
+      width: 0;
+      height: 3px;
+      background: var(--accent);
+    }
+
+    /* ===== 顶栏 ===== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      border-bottom: 1px solid color-mix(in srgb, var(--line-strong) 65%, transparent);
+      background: color-mix(in srgb, var(--paper) 88%, transparent);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .topbar__inner {
+      width: min(calc(100% - 40px), 1200px);
+      min-height: 60px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    .brand__mark {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--accent);
+      border-radius: 9px;
       font-family: var(--serif);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+    .toolbar { display: flex; align-items: center; gap: 8px; }
+    .toolbar button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--muted);
+      background: var(--surface-strong);
+      cursor: pointer;
+      font-size: 12.5px;
+      transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+    }
+    .toolbar button:hover:not(:disabled):not(.paper-swatch) { color: var(--accent-dark); border-color: var(--accent); background: var(--accent-soft); }
+    .toolbar button:disabled { opacity: .38; cursor: default; }
+    .toolbar__group {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-strong);
+      overflow: hidden;
+    }
+    .toolbar__group button { min-height: 34px; border: 0; border-radius: 0; background: transparent; }
+    .toolbar__group button + button { border-left: 1px solid var(--line); }
+    [data-size-reset] { min-width: 44px; color: var(--quiet); font-family: var(--mono); font-size: 12px; }
+    /* 目录按钮：仅窄屏显示（≤900px，与下方抽屉断点一致）。
+       选择器需带 button 提高优先级，否则会被 .toolbar button 的 display 覆盖 */
+    .toolbar button.toolbar__toc { display: none; }
+    .paper-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 36px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--surface-strong);
+    }
+    .toolbar .paper-swatch {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      min-height: 20px;
+      padding: 0;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+    /* 三种纸色的色样固定取各自纸面色，不随当前纸色变化 */
+    .toolbar .paper-swatch[data-paper-set="cream"] { background: #f6f1e3; }
+    .toolbar .paper-swatch[data-paper-set="green"] { background: #f2f4f1; }
+    .toolbar .paper-swatch[data-paper-set="white"] { background: #ffffff; }
+    .toolbar .paper-swatch:hover { border-color: var(--accent); }
+    .toolbar .paper-swatch.is-active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-soft);
+    }
+
+    /* ===== 布局 ===== */
+    .layout {
+      width: min(calc(100% - 40px), 1200px);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 268px minmax(0, 768px);
+      justify-content: center;
+      gap: 64px;
+      align-items: start;
+    }
+
+    /* ===== 目录 ===== */
+    .toc {
+      position: sticky;
+      top: 88px;
+      max-height: calc(100vh - 112px);
+      overflow: auto;
+      scrollbar-width: thin;
+      padding: 52px 0 40px;
+    }
+    .toc__head { display: flex; align-items: center; justify-content: space-between; }
+    .toc__title {
+      margin: 0 0 6px;
+      color: var(--quiet);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .toc__meta {
+      margin: 0 0 18px;
+      color: var(--quiet);
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      letter-spacing: .02em;
+    }
+    .toc__close { display: none; }
+    .toc__list { margin: 0; padding: 0; list-style: none; }
+    .toc__list li { margin: 0; }
+    .toc__list a {
+      position: relative;
+      display: block;
+      padding: 8px 10px 8px 16px;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      line-height: 1.55;
+      transition: color 140ms ease, background 140ms ease;
+    }
+    .toc__list a::before {
+      content: "";
+      position: absolute;
+      top: 9px;
+      bottom: 9px;
+      left: 0;
+      width: 3px;
+      border-radius: 2px;
+      background: transparent;
+      transition: background 140ms ease;
+    }
+    .toc__list a[data-level="1"] {
+      margin-top: 12px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .toc__list li:first-child a[data-level="1"] { margin-top: 0; }
+    .toc__list a[data-level="2"] { padding-left: 30px; font-size: 13px; }
+    .toc__list a[data-level="2"]::before { left: 14px; }
+    .toc__list a:hover { color: var(--accent-dark); }
+    .toc__list a.is-active { color: var(--accent-dark); background: var(--accent-soft); }
+    .toc__list a.is-active::before { background: var(--accent); }
+
+    /* 移动端目录抽屉的遮罩（开关样式见 ≤900px 媒体查询） */
+    .toc-backdrop { position: fixed; inset: 0; z-index: 110; background: var(--backdrop); }
+    .toc-backdrop[hidden] { display: none; }
+
+    /* ===== 正文（无衬线正文 + 衬线标题，尺寸随字号调节整体缩放） ===== */
+    .article {
+      min-width: 0;
+      padding: 58px 0 100px;
+      font-family: var(--sans);
+      font-size: var(--article-size);
+      line-height: 1.88;
+      letter-spacing: .008em;
+      overflow-wrap: break-word;
+    }
+    .article > *:first-child { margin-top: 0; }
+    .article h1, .article h2, .article h3 {
+      color: var(--ink);
+      font-family: var(--serif);
+      /* 使用自然行宽和严格中文标点换行，避免 balance 把标题机械切成等长两行 */
       text-wrap: pretty;
       word-break: normal;
       line-break: strict;
       overflow-wrap: break-word;
     }
-    .article h1 { margin: 0 0 18px; font-size: clamp(32px, 5vw, 56px); line-height: 1.18; }
-    .article h2 { margin: 52px 0 18px; font-size: 30px; line-height: 1.3; }
-    .article h3 { margin: 36px 0 12px; font-size: 22px; }
-    .article p { margin: 0 0 1.15em; }
-    .article a { color: var(--accent); text-underline-offset: 3px; }
-    .article blockquote { margin: 1.4em 0; padding: 1px 18px; border-left: 4px solid var(--accent); color: var(--muted); background: var(--surface); }
-    .article pre { overflow: auto; padding: 18px; border-radius: 10px; color: #e6f0eb; background: #17211e; }
-    .article code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
-    .article table { width: 100%; border-collapse: collapse; margin: 1.5em 0; font-size: 15px; }
-    .article th, .article td { padding: 10px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    /* 标题词组由脚本按中文语义切分；断点根据实际宽度动态计算，不写死具体标题 */
     .article .heading-word { white-space: nowrap; }
-    .article .heading-word.is-oversize { white-space: normal; }
+    .article .heading-word.is-oversize { white-space: normal; overflow-wrap: anywhere; }
     .article .heading-break { display: block; height: 0; }
+
+    /* 报头 */
+    .article h1:first-child {
+      max-width: 720px;
+      margin: 0 0 .55em;
+      font-size: clamp(2.2em, 5vw, 3.3em);
+      line-height: 1.14;
+      letter-spacing: -.02em;
+      font-weight: 900;
+    }
+    /* 报头下的日期牌与导语：由脚本按内容识别加类（.date-plate / .lede），
+       不用位置选择器，避免生成内容缺少日期段时误染普通段落 */
+    .article .date-plate {
+      display: inline-block;
+      max-width: 100%;
+      margin: .2em 0 2.6em;
+      padding: .52em .95em;
+      border: 0;
+      border-radius: 9px;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      font-family: var(--mono);
+      font-size: .8em;
+      line-height: 1.6;
+      letter-spacing: .05em;
+    }
+    .article .date-plate strong {
+      color: inherit;
+      font-family: inherit;
+      font-weight: 650;
+    }
+    .article blockquote.date-plate > p { margin: 0; }
+    .article blockquote.date-plate > p + p { margin-top: .5em; }
+    .article .lede {
+      font-size: 1.05em;
+      line-height: 1.9;
+      color: var(--ink);
+    }
+
+    /* 章节标题：上方短粗签名线 */
+    .article h1:not(:first-child) {
+      margin: 3em 0 1.1em;
+      font-size: clamp(1.65em, 3vw, 2.1em);
+      line-height: 1.26;
+      letter-spacing: -.015em;
+      font-weight: 850;
+    }
+    .article h1:not(:first-child)::before {
+      content: "";
+      display: block;
+      width: 52px;
+      height: 5px;
+      margin-bottom: .6em;
+      border-radius: 3px;
+      background: var(--accent);
+    }
+    .article h2 {
+      margin: 2.7em 0 1em;
+      font-size: clamp(1.32em, 2.3vw, 1.55em);
+      line-height: 1.42;
+      letter-spacing: -.01em;
+      font-weight: 800;
+    }
+    .article h3 {
+      margin: 2.4em 0 .9em;
+      font-size: 1.18em;
+      line-height: 1.5;
+      font-weight: 780;
+    }
+    .article h4 {
+      margin: 2em 0 .8em;
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 1.02em;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .article p { margin: 0 0 1.15em; }
+    .article strong { font-weight: 700; }
+
+    /* 字段标签芯片：脚本识别“一句话摘要：/来源：/判断：”等短标签自动加类 */
+    .article .field-tag {
+      display: inline-block;
+      margin-right: .5em;
+      padding: .12em .58em;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      font-size: .8em;
+      font-weight: 650;
+      letter-spacing: .04em;
+      vertical-align: .08em;
+    }
+    /* “重要性：极高。”一类整行强调 */
+    .article .field-line { color: var(--accent-dark); font-weight: 700; }
+
+    .article a {
+      color: var(--accent-dark);
+      text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
+    }
+    .article a:hover { color: var(--accent); text-decoration-color: currentColor; }
+
+    /* 引文：衬线放大陈述块 */
+    .article blockquote {
+      margin: 2em 0;
+      padding: .25em 0 .25em 1.25em;
+      border: 0;
+      border-left: 4px solid var(--accent);
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 1.12em;
+      line-height: 1.75;
+      font-weight: 650;
+    }
+    .article blockquote p { margin-bottom: .9em; }
+    .article blockquote p:last-child { margin-bottom: 0; }
+
+    .article ul, .article ol { margin: .3em 0 1.35em; padding-left: 1.5em; }
+    .article li { margin: .45em 0; padding-left: .15em; }
+    .article li::marker { color: var(--accent); }
+
+    .article code {
+      padding: .12em .42em;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--accent-dark);
+      background: var(--surface-strong);
+      font-family: var(--mono);
+      font-size: .84em;
+    }
+
+    /* 终端面板：页面签名元素 */
+    .article pre {
+      margin: 1.7em 0;
+      padding: 1.35em 1.5em;
+      overflow-x: auto;
+      border: 1px solid var(--panel-line);
+      border-radius: 14px;
+      color: var(--panel-ink);
+      background: var(--panel);
+      font-family: var(--mono);
+      font-size: .8em;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      box-shadow: var(--shadow);
+    }
+    .article pre code { padding: 0; border: 0; color: inherit; background: transparent; font-size: inherit; }
+
+    /* 条目分隔：短粗线 */
+    .article hr {
+      width: 46px;
+      margin: 2.7em 0;
+      border: 0;
+      border-top: 3px solid var(--line-strong);
+      border-radius: 2px;
+    }
+    /* 章节标题自带签名线，紧邻其前的 <hr> 隐藏，避免双线堆叠 */
+    .article hr:has(+ h1) { display: none; }
+
+    /* ——模板预置：当日内容出现表格、图片、折叠块等时无需补样式—— */
+    .article table {
+      width: 100%;
+      margin: 1.7em 0;
+      border-collapse: collapse;
+      font-size: .84em;
+      line-height: 1.6;
+    }
+    .article th, .article td {
+      padding: .62em .85em;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    .article th { background: var(--surface); font-weight: 700; }
+    .article tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface) 55%, transparent); }
+    .article img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; }
+    .article figure { margin: 1.8em 0; }
+    .article figcaption {
+      margin-top: .7em;
+      color: var(--quiet);
+      font-family: var(--mono);
+      font-size: .72em;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .article details {
+      margin: 1.5em 0;
+      padding: .95em 1.2em;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+    .article summary { cursor: pointer; font-weight: 680; }
+    .article details[open] summary { margin-bottom: .6em; }
+    .article mark { padding: .05em .28em; border-radius: 3px; color: inherit; background: var(--accent-soft); }
+    .article kbd {
+      padding: .1em .45em;
+      border: 1px solid var(--line-strong);
+      border-bottom-width: 2px;
+      border-radius: 5px;
+      background: var(--surface-strong);
+      font-family: var(--mono);
+      font-size: .8em;
+    }
+
+    /* ===== 回到顶部 ===== */
+    .back-top {
+      position: fixed;
+      right: 20px;
+      bottom: 22px;
+      z-index: 80;
+      width: 46px;
+      height: 46px;
+      border: 1px solid var(--line-strong);
+      border-radius: 50%;
+      color: var(--muted);
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .back-top:hover { color: var(--accent-dark); border-color: var(--accent); }
+    .back-top[hidden] { display: none; }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 228px minmax(0, 760px); gap: 44px; }
+      .toc__list a { font-size: 13.5px; }
+      .toc__list a[data-level="2"] { font-size: 12.5px; }
+    }
     @media (max-width: 900px) {
-      .layout { display: block; }
+      .layout { width: min(calc(100% - 36px), 760px); display: block; }
+      .article { padding-top: 40px; }
+      .toolbar button.toolbar__toc { display: inline-flex; }
       .toc { display: none; }
-      .article { padding-top: 34px; }
-      .topbar__inner { width: min(92vw, 760px); }
+      body.toc-open { overflow: hidden; }
+      body.toc-open .toc {
+        display: block;
+        position: fixed;
+        z-index: 120;
+        top: 0; left: 0; bottom: 0;
+        width: min(340px, 86vw);
+        max-height: none;
+        margin: 0;
+        padding: 22px 22px 32px;
+        background: var(--surface-strong);
+        border-right: 1px solid var(--line);
+        box-shadow: var(--shadow);
+      }
+      body.toc-open .toc__close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px; height: 34px;
+        margin-top: -6px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        color: var(--muted);
+        background: var(--surface-strong);
+        cursor: pointer;
+      }
+      .back-top { right: 14px; bottom: 16px; }
     }
+    @media (max-width: 560px) {
+      .topbar__inner { width: calc(100% - 28px); min-height: 56px; }
+      .brand { font-size: 12.5px; }
+      .brand__mark { width: 28px; height: 28px; }
+      .brand > span:last-child { display: none; }   /* 极窄屏只留标识，给工具条让位 */
+      .layout { width: calc(100% - 30px); }
+      .article { padding: 32px 0 68px; }
+      .article blockquote { padding-left: 1em; }
+      .article pre { margin-left: -2px; margin-right: -2px; padding: 1.15em 1.05em; }
+      .article table { display: block; overflow-x: auto; }
+      .toolbar { gap: 6px; }
+      .toolbar button { min-width: 32px; padding: 0 9px; }
+      .toolbar [data-print] { display: none; }
+    }
+
+    /* ===== 打印 ===== */
     @media print {
-      .topbar, .toc { display: none; }
-      .layout { display: block; width: auto; }
-      .article { padding: 0; }
+      .progress, .topbar, .toc, .back-top, .toc-backdrop { display: none !important; }
+      body { background: #fff; }
+      .layout { width: auto; display: block; }
+      .article { max-width: none; padding: 0; font-size: 11pt; line-height: 1.7; }
+      .article h1:first-child { font-size: 26pt; }
+      .article h1:not(:first-child) { font-size: 18pt; }
+      .article h2 { font-size: 14pt; }
+      .article h1, .article h2, .article h3 { break-after: avoid; }
+      .article pre {
+        color: #222;
+        background: #f4f4f2;
+        border-color: #ccc;
+        box-shadow: none;
+        break-inside: avoid;
+      }
+      .article blockquote { break-inside: avoid; }
+      .article a { color: inherit; }
     }
+
+    /* ===== 动效偏好 ===== */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; animation: none !important; }
+    }
+
   </style>
 </head>
 <body>
+  <div class="progress" aria-hidden="true"></div>
   <header class="topbar">
     <div class="topbar__inner">
-      <div class="brand">AI NEWS</div>
-      <div class="meta">{{DATE_DOTTED}}</div>
+      <a class="brand" href="#top" aria-label="回到文章开头">
+        <span class="brand__mark">AI</span>
+        <span>快讯</span>
+      </a>
+      <div class="toolbar" aria-label="阅读工具">
+        <button type="button" class="toolbar__toc" data-toc-toggle aria-expanded="false" aria-controls="toc" aria-label="打开目录">目录</button>
+        <div class="toolbar__group" role="group" aria-label="调节正文字号">
+          <button type="button" data-size="down" aria-label="缩小字号">A−</button>
+          <button type="button" data-size-reset title="点按恢复默认字号 17px" aria-label="当前字号，点按恢复默认">17</button>
+          <button type="button" data-size="up" aria-label="放大字号">A+</button>
+        </div>
+        <div class="paper-group" role="group" aria-label="切换纸张底色">
+          <button type="button" class="paper-swatch" data-paper-set="white" aria-label="白色纸（默认）" title="白色纸（默认）"></button>
+          <button type="button" class="paper-swatch" data-paper-set="cream" aria-label="米黄纸" title="米黄纸"></button>
+          <button type="button" class="paper-swatch" data-paper-set="green" aria-label="灰绿纸" title="灰绿纸"></button>
+        </div>
+        <button type="button" data-print aria-label="打印或保存 PDF">打印</button>
+      </div>
     </div>
   </header>
-  <main class="layout">
-    <nav class="toc" aria-label="目录">
-      <ol data-toc></ol>
-    </nav>
-    <article class="article">{{ARTICLE_HTML}}</article>
-  </main>
-  <script>
-    (function () {
-      'use strict';
-      const safely = (name, fn) => { try { fn(); } catch (error) { console.warn(name, error); } };
-      const article = document.querySelector('.article');
-      const toc = document.querySelector('[data-toc]');
 
+  <main class="layout" id="top">
+    <nav class="toc" id="toc" aria-label="文章目录">
+      <div class="toc__head">
+        <p class="toc__title">目录</p>
+        <button type="button" class="toc__close" data-toc-close aria-label="关闭目录">✕</button>
+      </div>
+      <p class="toc__meta" data-reading-time>正在计算阅读时间</p>
+      <ol class="toc__list"></ol>
+    </nav>
+
+<!--
+  ══════════ 新闻内容注入区（只由构建脚本写入） ══════════
+  正文由独立 Markdown 文件生成；页头、目录、样式与脚本保持不动。
+  请勿手工修改生成后的 HTML，修改 Markdown 后重新构建并执行 lint。
+-->
+    <article class="article">
+{{ARTICLE_HTML}}
+</article>
+  </main>
+
+  <div class="toc-backdrop" data-toc-close hidden></div>
+  <button type="button" class="back-top" data-back-top hidden aria-label="回到顶部">↑</button>
+
+  <script>
+    (() => {
+      /* 各功能块相互隔离：任何一块出错不影响其它功能 */
+      const safely = (name, fn) => {
+        try { fn(); } catch (error) { console.error('[页面脚本] ' + name + ' 初始化失败：', error); }
+      };
+      const store = {
+        get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+        set(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* 存储不可用时忽略 */ } }
+      };
+      const article = document.querySelector('.article');
+      const list = document.querySelector('.toc__list');
+      let relayoutHeadings = () => {};
+
+      /* ===== 报头识别：日报日期或周报日期范围 → 日期牌，其后一段 → 导语 ===== */
+      safely('报头识别', () => {
+        if (!article) return;
+        const masthead = article.querySelector('h1:first-child');
+        const first = masthead && masthead.nextElementSibling;
+        const isDateBlock = first && (first.tagName === 'P' || first.tagName === 'BLOCKQUOTE');
+        if (isDateBlock && /^(?:生成日期|生成时间|日期范围|统计周期)/.test(first.textContent.trim())) {
+          first.classList.add('date-plate');
+          const next = first.nextElementSibling;
+          if (next && next.tagName === 'P') next.classList.add('lede');
+        }
+      });
+
+      /* ===== 字段标签识别：短“××：”标签渲染为芯片，“重要性：……”整行强调 ===== */
+      safely('字段标签', () => {
+        if (!article) return;
+        article.querySelectorAll('p > strong:first-child').forEach((strong) => {
+          const p = strong.parentElement;
+          if (!p || p.tagName !== 'P' || p.closest('.date-plate')) return;
+          const label = strong.textContent.trim();
+          const hasTrailingText = p.textContent.trim().length > label.length;
+          if (hasTrailingText && label.length <= 14 && /[：:]$/.test(label)) {
+            strong.classList.add('field-tag');
+          } else if (!hasTrailingText && /^重要性：/.test(label)) {
+            strong.classList.add('field-line');
+          }
+        });
+      });
+
+      /* ===== 标题智能换行：分词给出候选边界，再按实际宽度和标点优先级选择断点 ===== */
       safely('标题智能换行', () => {
         if (!article || !('Segmenter' in Intl)) return;
         const segmenter = new Intl.Segmenter('zh-CN', { granularity: 'word' });
-        const strongBreakPunctuation = new Set(['：', ':', '，', ',']);
-        const noBreakGroups = new Set(['（', '(', '《', '“', '‘']);
+        const hanWord = /^[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]+$/;
+        const punctuationPairs = new Map([
+          ['“', '”'], ['‘', '’'], ['「', '」'], ['『', '』'], ['（', '）'],
+          ['《', '》'], ['〈', '〉'], ['【', '】'], ['〔', '〕'], ['〖', '〗'],
+          ['(', ')'], ['[', ']'], ['{', '}']
+        ]);
+        const openingPunctuation = new Set(punctuationPairs.keys());
+        const strongBreakPunctuation = new Set(Array.from('：:，,'));
+        const normalBreakPunctuation = new Set(Array.from('、。！？；.!?;'));
+        const headings = [...article.querySelectorAll('h1, h2, h3')];
+
+        headings.forEach((heading) => {
+          if (heading.querySelector('.heading-word')) return;
+          const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT);
+          const textNodes = [];
+          while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+          let lastWord = null;
+          let pendingPrefix = '';
+          let groupSequence = 0;
+          const activeGroups = [];
+          textNodes.forEach((textNode) => {
+            const parts = [...segmenter.segment(textNode.data)];
+            const fragment = document.createDocumentFragment();
+
+            const appendWord = (value, singleHan) => {
+              const span = document.createElement('span');
+              span.className = 'heading-word';
+              span.textContent = pendingPrefix + value;
+              if (singleHan) span.dataset.singleHan = 'true';
+              if (hanWord.test(value)) span.dataset.hanWord = 'true';
+              if (activeGroups.length) span.dataset.noBreakGroups = activeGroups.map((group) => group.id).join(',');
+              pendingPrefix = '';
+              fragment.append(span);
+              lastWord = span;
+            };
+
+            const appendPunctuation = (value) => {
+              Array.from(value).forEach((character) => {
+                if (/^\s$/u.test(character)) {
+                  if (lastWord) lastWord.textContent += character;
+                  else pendingPrefix += character;
+                  return;
+                }
+                if (openingPunctuation.has(character)) {
+                  pendingPrefix += character;
+                  activeGroups.push({ id: String(++groupSequence), close: punctuationPairs.get(character) });
+                  return;
+                }
+                if (lastWord) {
+                  lastWord.textContent += character;
+                  if (strongBreakPunctuation.has(character)) lastWord.dataset.breakPriority = 'strong';
+                  else if (normalBreakPunctuation.has(character)) lastWord.dataset.breakPriority = 'normal';
+                  const groupIndex = activeGroups.map((group) => group.close).lastIndexOf(character);
+                  if (groupIndex >= 0) activeGroups.splice(groupIndex);
+                  return;
+                }
+                pendingPrefix += character;
+              });
+            };
+
+            parts.forEach((part) => {
+              if (part.isWordLike) {
+                const singleHan = hanWord.test(part.segment) && Array.from(part.segment).length === 1;
+                appendWord(part.segment, singleHan);
+              } else {
+                appendPunctuation(part.segment);
+              }
+            });
+
+            textNode.replaceWith(fragment);
+          });
+          if (pendingPrefix) {
+            if (lastWord) lastWord.textContent += pendingPrefix;
+            else heading.append(document.createTextNode(pendingPrefix));
+          }
+        });
+
         const boundaryPenalty = (left, right) => {
           if (!left || !right) return 0;
-          if (strongBreakPunctuation.has(left.slice(-1))) return -20;
-          if (noBreakGroups.has(left.slice(-1)) || /[，。！？；：、）》”’]/.test(right[0])) return 40;
-          return 0;
+          let penalty = 0;
+          if (!left.dataset.breakPriority) {
+            if (left.dataset.singleHan === 'true' || right.dataset.singleHan === 'true') penalty += 42;
+            if (left.dataset.hanWord === 'true' && right.dataset.hanWord === 'true') penalty += 8;
+          }
+
+          const leftGroups = new Set((left.dataset.noBreakGroups || '').split(',').filter(Boolean));
+          const sharesGroup = (right.dataset.noBreakGroups || '').split(',').some((group) => leftGroups.has(group));
+          if (sharesGroup) penalty += 10000;
+
+          const firstRightCharacter = Array.from(right.textContent.trimStart())[0];
+          if (openingPunctuation.has(firstRightCharacter)) penalty -= 18;
+          return penalty;
         };
-        const headings = [...article.querySelectorAll('h1,h2,h3')];
-        headings.forEach((heading) => {
-          const source = heading.textContent.trim();
-          if (!source) return;
-          const words = [...segmenter.segment(source)].map((part) => part.segment).filter(Boolean);
-          heading.textContent = '';
-          words.forEach((word) => {
-            const span = document.createElement('span');
-            span.className = 'heading-word';
-            span.textContent = word;
-            heading.append(span);
+
+        const layoutHeading = (heading) => {
+          heading.querySelectorAll('.heading-break').forEach((marker) => marker.remove());
+          const words = [...heading.querySelectorAll('.heading-word')];
+          if (words.length < 2) return;
+
+          words.forEach((word) => word.classList.remove('is-oversize'));
+          const available = heading.clientWidth;
+          if (!(available > 0)) return;
+          /* 为字体小数像素和严格标点规则预留少量余量，避免浏览器在计划断点之外再次换行 */
+          const lineLimit = Math.max(1, available - Math.max(2, available * 0.01));
+
+          const widths = words.map((word) => word.getBoundingClientRect().width);
+          widths.forEach((width, index) => {
+            if (width > available + 0.5) words[index].classList.add('is-oversize');
           });
-          const lineLimit = heading.clientWidth;
-          const spans = [...heading.querySelectorAll('.heading-word')];
-          let used = 0;
-          spans.forEach((span, index) => {
-            const width = span.getBoundingClientRect().width;
-            if (width > lineLimit) span.classList.add('is-oversize');
-            if (index > 0 && used + width > lineLimit && boundaryPenalty(spans[index - 1].textContent, span.textContent) <= 0) {
-              const marker = document.createElement('span');
-              marker.className = 'heading-break';
-              marker.setAttribute('aria-hidden', 'true');
-              span.before(marker);
-              used = 0;
+
+          const prefix = [0];
+          widths.forEach((width) => prefix.push(prefix[prefix.length - 1] + Math.min(width, available)));
+          const costs = Array(words.length + 1).fill(Number.POSITIVE_INFINITY);
+          const nextBreak = Array(words.length + 1).fill(words.length);
+          costs[words.length] = 0;
+
+          for (let start = words.length - 1; start >= 0; start -= 1) {
+            for (let end = start + 1; end <= words.length; end += 1) {
+              const width = prefix[end] - prefix[start];
+              if (width > lineLimit && end > start + 1) break;
+
+              const isLastLine = end === words.length;
+              const fill = Math.min(width / available, 1);
+              const emptyRatio = 1 - fill;
+              let cost = emptyRatio * emptyRatio * (isLastLine ? 18 : 100);
+
+              if (!isLastLine) {
+                cost += 4 + boundaryPenalty(words[end - 1], words[end]);
+                const priority = words[end - 1].dataset.breakPriority;
+                if (fill >= 0.36 && priority === 'strong') cost -= 34;
+                else if (fill >= 0.58 && priority === 'normal') cost -= 12;
+                if (fill < 0.36) cost += (0.36 - fill) * 120;
+              } else if (end-start === 1 || fill < 0.24) {
+                cost += 38;
+              }
+
+              cost += costs[end];
+              if (cost < costs[start]) {
+                costs[start] = cost;
+                nextBreak[start] = end;
+              }
             }
-            used += width;
-          });
+          }
+
+          for (let start = 0; start < words.length;) {
+            const end = nextBreak[start];
+            if (!(end > start) || end >= words.length) break;
+            const marker = document.createElement('span');
+            marker.className = 'heading-break';
+            marker.setAttribute('aria-hidden', 'true');
+            words[end - 1].after(marker);
+            start = end;
+          }
+        };
+
+        let layoutTimer = 0;
+        relayoutHeadings = () => {
+          clearTimeout(layoutTimer);
+          layoutTimer = setTimeout(() => headings.forEach(layoutHeading), 0);
+        };
+        addEventListener('resize', relayoutHeadings);
+        relayoutHeadings();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayoutHeadings);
+      });
+
+      /* ===== 目录：从正文 h1/h2 自动生成 ===== */
+      safely('目录生成', () => {
+        if (!article || !list) return;
+        const headings = [...article.querySelectorAll('h1:not(:first-child), h2')];
+        headings.forEach((heading, index) => {
+          heading.id = 'section-' + (index + 1);
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = '#' + heading.id;
+          link.textContent = heading.textContent;
+          link.dataset.level = heading.tagName.slice(1);
+          item.append(link);
+          list.append(item);
+        });
+
+        if (!headings.length || !('IntersectionObserver' in window)) return;
+        const tocBox = document.querySelector('.toc');
+        const tocLinks = [...list.querySelectorAll('a')];
+        const observer = new IntersectionObserver((entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+          if (!visible) return;
+          tocLinks.forEach((link) => link.classList.toggle('is-active', link.hash === '#' + visible.target.id));
+          const active = list.querySelector('a.is-active');
+          if (active && tocBox && !document.body.classList.contains('toc-open')) {
+            const box = tocBox.getBoundingClientRect();
+            const rect = active.getBoundingClientRect();
+            if (rect.top < box.top + 12 || rect.bottom > box.bottom - 12) {
+              tocBox.scrollTop += rect.top - (box.top + box.height / 2);
+            }
+          }
+        }, { rootMargin: '-84px 0px -70% 0px' });
+        headings.forEach((heading) => observer.observe(heading));
+      });
+
+      /* ===== 目录抽屉：全局事件委托，按钮任何时机可用 ===== */
+      safely('目录抽屉', () => {
+        const backdrop = document.querySelector('.toc-backdrop');
+        const tocToggle = document.querySelector('[data-toc-toggle]');
+        const setToc = (open) => {
+          document.body.classList.toggle('toc-open', open);
+          if (backdrop) backdrop.hidden = !open;
+          if (tocToggle) tocToggle.setAttribute('aria-expanded', String(open));
+        };
+        document.addEventListener('click', (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+          if (target.closest('[data-toc-toggle]')) {
+            setToc(!document.body.classList.contains('toc-open'));
+          } else if (target.closest('[data-toc-close]')) {
+            setToc(false);
+          } else if (target.closest('.toc__list a')) {
+            setToc(false);
+          }
+        });
+        addEventListener('keydown', (event) => { if (event.key === 'Escape') setToc(false); });
+        /* 窗口拉宽超过抽屉断点（900px，与 CSS 一致）时自动收起，避免残留展开状态 */
+        addEventListener('resize', () => {
+          if (innerWidth > 900 && document.body.classList.contains('toc-open')) setToc(false);
         });
       });
 
-      safely('目录生成', () => {
-        if (!article || !toc) return;
-        [...article.querySelectorAll('h1:not(:first-child), h2')].forEach((heading, index) => {
-          heading.id = `section-${index + 1}`;
-          const item = document.createElement('li');
-          const link = document.createElement('a');
-          link.href = `#${heading.id}`;
-          link.textContent = heading.textContent;
-          item.append(link);
-          toc.append(item);
+      /* ===== 阅读进度与回到顶部 ===== */
+      safely('进度与回顶', () => {
+        const progress = document.querySelector('.progress');
+        const backTop = document.querySelector('[data-back-top]');
+        const onScroll = () => {
+          const distance = document.documentElement.scrollHeight - innerHeight;
+          if (progress) progress.style.width = (distance > 0 ? scrollY / distance * 100 : 0) + '%';
+          if (backTop) backTop.hidden = scrollY < 720;
+        };
+        addEventListener('scroll', onScroll, { passive: true });
+        addEventListener('resize', onScroll);
+        onScroll();
+        backTop && backTop.addEventListener('click', () => {
+          let instant = false;
+          try { instant = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* 忽略 */ }
+          scrollTo({ top: 0, behavior: instant ? 'auto' : 'smooth' });
         });
       });
+
+      /* ===== 阅读时间与字数（按 460 字/分钟） ===== */
+      safely('阅读统计', () => {
+        if (!article) return;
+        const characters = article.textContent.replace(/\s/g, '').length;
+        const minutes = Math.max(1, Math.round(characters / 460));
+        const slot = document.querySelector('[data-reading-time]');
+        if (slot) slot.textContent = '约 ' + minutes + ' 分钟 · ' + characters.toLocaleString('zh-CN') + ' 字';
+      });
+
+      /* ===== 字号调节：14–24px，持久化，可一键复位 ===== */
+      safely('字号调节', () => {
+        const SIZE_MIN = 14, SIZE_MAX = 24, SIZE_DEFAULT = 17, SIZE_KEY = 'ainews:font-size';
+        const sizeDown = document.querySelector('[data-size="down"]');
+        const sizeUp = document.querySelector('[data-size="up"]');
+        const sizeReset = document.querySelector('[data-size-reset]');
+        let fontSize = parseInt(store.get(SIZE_KEY), 10);
+        if (!(fontSize >= SIZE_MIN && fontSize <= SIZE_MAX)) fontSize = SIZE_DEFAULT;
+
+        const applySize = () => {
+          document.documentElement.style.setProperty('--article-size', fontSize + 'px');
+          if (sizeReset) sizeReset.textContent = fontSize;
+          if (sizeDown) sizeDown.disabled = fontSize <= SIZE_MIN;
+          if (sizeUp) sizeUp.disabled = fontSize >= SIZE_MAX;
+          store.set(SIZE_KEY, fontSize);
+          relayoutHeadings();
+        };
+        sizeDown && sizeDown.addEventListener('click', () => { fontSize = Math.max(SIZE_MIN, fontSize - 1); applySize(); });
+        sizeUp && sizeUp.addEventListener('click', () => { fontSize = Math.min(SIZE_MAX, fontSize + 1); applySize(); });
+        sizeReset && sizeReset.addEventListener('click', () => { fontSize = SIZE_DEFAULT; applySize(); });
+        applySize();
+      });
+
+      /* ===== 纸色切换：灰绿 / 米黄 / 白，持久化 ===== */
+      safely('纸色切换', () => {
+        const PAPER_KEY = 'ainews:paper';
+        const PAPERS = { green: '#f2f4f1', cream: '#f6f1e3', white: '#ffffff' };
+        const swatches = [...document.querySelectorAll('[data-paper-set]')];
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        let paper = store.get(PAPER_KEY);
+        if (!PAPERS[paper]) paper = 'white';
+
+        const applyPaper = () => {
+          if (paper === 'white') document.documentElement.removeAttribute('data-paper');
+          else document.documentElement.setAttribute('data-paper', paper);
+          if (themeMeta) themeMeta.content = PAPERS[paper];
+          swatches.forEach((swatch) => {
+            const active = swatch.dataset.paperSet === paper;
+            swatch.classList.toggle('is-active', active);
+            swatch.setAttribute('aria-pressed', String(active));
+          });
+          store.set(PAPER_KEY, paper);
+        };
+        swatches.forEach((swatch) => swatch.addEventListener('click', () => {
+          paper = swatch.dataset.paperSet;
+          applyPaper();
+        }));
+        applyPaper();
+      });
+
+      /* ===== 打印 ===== */
+      safely('打印', () => {
+        const printBtn = document.querySelector('[data-print]');
+        printBtn && printBtn.addEventListener('click', () => print());
+      });
     })();
+
   </script>
 </body>
 </html>

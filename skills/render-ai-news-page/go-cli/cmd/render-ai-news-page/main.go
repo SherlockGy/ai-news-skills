@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/SherlockGy/ai-news-skills/skills/render-ai-news-page/go-cli/internal/app"
+	"finance-skills/common/render-ai-news-page/go-cli/internal/app"
 )
 
 func main() {

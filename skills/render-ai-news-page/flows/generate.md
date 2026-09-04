@@ -25,11 +25,18 @@
 ## 执行闭环
 
 1. 确认完整输入范围并取得可供 CLI 读取的 UTF-8 `.md` 路径。现成 Markdown 文件无需为了事实或内容审查而通读；结构问题交给 CLI 诊断。
-2. 确认环境中可用 Go 1.25 或更高版本。普通生成直接使用随 skill 分发的 Go 源码，不依赖预编译二进制。
-3. 在 `go-cli/` 目录执行：
+2. 按当前运行平台选择唯一二进制：
+
+   | 平台 | 命令入口 |
+   |------|----------|
+   | Windows amd64 | `go-cli/bin/render-ai-news-page-windows-amd64.exe` |
+   | Linux amd64 | `go-cli/bin/render-ai-news-page-linux-amd64` |
+   | macOS amd64 | `go-cli/bin/render-ai-news-page-darwin-amd64` |
+
+3. 在本 skill 目录执行：
 
    ```text
-   go run ./cmd/render-ai-news-page build --report-type <daily|weekly> --source <新闻稿.md> --output <目标.html>
+   <命令入口> build --report-type <daily|weekly> --source <新闻稿.md> --output <目标.html>
    ```
 
    - `--report-type`、`--source` 与 `--output` 均必填且只能出现一次。
@@ -47,7 +54,7 @@
 - 退出码 `2`：命令、参数或控制模式错误；修正调用方式后重试。
 - 退出码 `3`：源稿、模板或页面 lint 失败；按诊断修正源稿，普通生成不得修改模板或 CLI。
 - 退出码 `4`：文件读取、生成或写入失败；报告原始错误和涉及路径，不宣称已生成。
-- Go 1.25+ 不可用或依赖无法取得时停止并报告环境问题；不得临时改用 Python 或现场重写 HTML。
+- 二进制缺失或当前平台不在上述三项中时停止，转交开发者维护；不得临时改用 Python 或现场重写 HTML。
 
 ## 禁止事项
 

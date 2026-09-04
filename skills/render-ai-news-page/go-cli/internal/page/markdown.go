@@ -9,7 +9,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/SherlockGy/ai-news-skills/skills/render-ai-news-page/go-cli/internal/domain"
+	"finance-skills/common/render-ai-news-page/go-cli/internal/domain"
 	cjkfriendly "github.com/tats-u/goldmark-cjk-friendly/v2"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"

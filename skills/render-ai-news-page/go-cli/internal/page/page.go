@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/SherlockGy/ai-news-skills/skills/render-ai-news-page/go-cli/internal/domain"
+	"finance-skills/common/render-ai-news-page/go-cli/internal/domain"
 	"github.com/dop251/goja/parser"
 	parse "github.com/tdewolff/parse/v2"
 	cssparser "github.com/tdewolff/parse/v2/css"

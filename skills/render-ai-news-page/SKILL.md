@@ -3,7 +3,6 @@ name: render-ai-news-page
 description: |
   将用户通过文件、当前消息或 Agent 上下文独立提供的 AI 或科技日报、周报文本渲染为固定模板的单页面 HTML。
   当用户要求生成 AI 日报或周报 HTML、按既有新闻模板排版，或开发者要维护该模板、lint 与生成工具时使用。
-compatibility: Requires Go 1.25+ for rendering and CLI maintenance.
 ---
 
 # AI 新闻单页面生成
