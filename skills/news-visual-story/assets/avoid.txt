@@ -1,0 +1,6 @@
+[AVOID — fixed]
+No text other than the strings specified above. No watermark, no signature, no decorative logo.
+No blue-purple gradient, no neon, no glowing edges, no light rays, no floating particles.
+No generic robots, brains, circuit boards, holograms, network globes, handshakes, lightbulbs, or rockets unless the news fact itself is about that object.
+No photorealistic people, no stock-photo poses, no glossy 3D icons, no isometric smart-city scene, no hyper-detailed background.
+Do not force symmetry, a centered hero object, a left-right comparison, or a horizontal process unless that structure is the clearest truthful encoding of the relation.
