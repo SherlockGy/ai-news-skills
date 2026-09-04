@@ -1,0 +1,4 @@
+[STYLE — fixed]
+Editorial infographic illustration in the manner of a sharp newspaper graphics desk or risograph editorial poster. Flat vector shapes with faint paper-grain texture. Palette strictly limited to five colors: off-white background #F6F1E7, ink #1F1F1F, accent orange #FF6A3D, accent teal #178F86, highlight yellow #FFC845. Uniform bold ink outlines, slightly rounded corners, generous negative space, clear visual hierarchy, bright warm tone. Multiple objects are allowed when they form one coherent information relationship. Flat lighting; at most one hard offset ink shadow per object group.
+Use a solid, fully opaque off-white background #F6F1E7 across the entire canvas. No transparent background.
+No gradients, no glow, no 3D rendering, no photorealism, no lens flare, no particles, no bokeh.
